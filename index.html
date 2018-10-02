@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Keysight</title>
+</head>
+<body>
+<style>
+text {
+  fill: #000;
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+</style>
+
+<svg width="1200" height="800"></svg>
+
+<script src="https://d3js.org/d3-drag.v1.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<script>
+//list build as an example, functions dont necessarily take those many inputs.
+functions=[
+{"name":"Add()",
+"inputs":"2"
+},
+{"name":"Subtract()",
+"inputs":"2"
+},
+{"name":"foo()",
+"inputs":"3"
+},
+{"name":"DoSomething()",
+"inputs":"1"
+},
+{"name":"indexOf()",
+"inputs":"1"
+},
+{"name":"match()",
+"inputs":"1"
+},
+{"name":"includes()",
+"inputs":"2"
+},
+{"name":"charAt()",
+"inputs":"2"
+},
+{"name":"split()",
+"inputs":"2"
+},
+{"name":"splice()",
+"inputs":"3"
+},
+{"name":"forEach()",
+"inputs":"1"
+},
+{"name":"toString()",
+"inputs":"1"
+}
+
+]
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height"),
+	radius = 8,
+	size=0;
+	drag_area_x=200,
+	drag_area_y=10,
+	drag_area_width=1000,
+	drag_area_height=600;
+	
+	functions.forEach(function(functions){
+	(size++);
+	})
+	
+	
+	
+var circle_data = d3.range(size).map(function(d,i) {
+  return {
+    x: (10+ radius),
+    y: ((i*20) + radius),
+	name: functions[i].name,
+	size: functions[i].inputs,
+  };
+});
+var color = d3.scaleOrdinal()
+    .range(d3.schemeCategory20);
+
+var group=svg.selectAll("g").data(circle_data).enter().append("g")
+			 .call(d3.drag()
+			 .on("start", dragstarted)
+			 .on("drag", dragged)
+			 .on("end", dragended));	
+
+			 
+var circle =group.append("circle");
+
+var circleAttr=circle.attr("cx", function(d) { return d.x; })
+					 .attr("cy", function(d) { return d.y; })
+					 .attr("r", radius)
+					 .attr("name",function(d){return d.name;})
+					 .attr("inputs",function(d){return d.size;})
+					 .attr("id",function(d,i){return 1;})
+					 .style("fill", function(d, i) { return color(i); })
+					 
+		
+var text=group.append("text").text(function(d){return d.name});
+		
+var textattr=text
+	.attr("x",function(d){return d.x*1.5+radius;})
+	.attr("y",function(d){return d.y+radius/2;})
+	.attr("id",function(d,i){return i;})
+	.style("fill", function(d, i) { return 0;}); 	
+	
+function dragstarted(d) {
+  d3.select(this).raise().classed("active", true);
+}
+
+//this function is called when any object is dragged.
+
+function dragged(d) {
+  var id=d3.select(this);
+	
+	var circle=id.select("circle")._groups[0][0]
+	var text=id.select("text")._groups[0][0]
+	var temp;
+    d3.select(circle).attr("cx", function(d){ temp=d.x;d.x= d3.event.x;  return d3.event.x;})
+					 .attr("cy", function(d){ temp=d.y;d.y=d3.event.y;   return d3.event.y;});
+	d3.select(text).attr("x", function(d){ temp=d.x;d.x= d3.event.x;  return 16+d3.event.x; })
+					 .attr("y", function(d){ temp=d.y;d.y=d3.event.y;   return radius/2+d3.event.y; });
+					 
+					 
+					 
+if((d3.event.x>drag_area_x)&&(d3.event.x<drag_area_x+drag_area_width-100)&&(d3.event.y>drag_area_y)&&(d3.event.y<drag_area_y+drag_area_height-50)){
+if((circle.id==1)){
+circle.id=2;
+var sizes=d3.select(circle)._groups[0][0].attributes.inputs.value;
+var nodes=[];
+
+var new_data1= d3.range(sizes);
+var new_data2=[];
+var i=0;
+for(i;i<sizes;i=i+1){
+new_data2[i]=new_data1[i]+1;
+}
+new_data2[sizes]=0;
+var new_data=new_data2.map(function(d,i) {
+  return {
+    x: (20+ radius),
+    y: (((i-1)*35) + radius),
+  };
+});
+
+var x1;
+var y1;
+var new_rect=id.selectAll("circle").data(new_data).enter()		//add new rectangle
+	  .append("rect")	  
+	  .attr("x", function(d){ return d.x+d3.event.x;})
+      .attr("y", function(d){return d.y+d3.event.y;})
+      .attr("width", 80)
+      .attr("height", 30)
+	  .attr("fill","#FFFFFF")
+	  .attr("style","stroke-width:2;stroke:rgb(0,0,0)")
+	  ;
+	  
+var new_input=id.selectAll("circle").data(new_data).enter()		//add new input
+	.append("foreignObject")
+	 .attr("x", function(d){ return d.x+d3.event.x;})
+      .attr("y", function(d){return d.y+d3.event.y;})
+	  .attr("width", 80)
+      .attr("height", 30);
+	  
+	var input=new_input.append("xhtml:div").append("input")
+	.attr('type','text')
+    .attr('name','textInput')
+    .attr('value',' ')
+    .attr("style", "width:76px;height:24px;");
+	  
+ }
+
+
+else if(circle.id==2){												//drag rectangle
+id.selectAll("rect")
+		.attr("x", function(d,i){ return d.x+40+d3.event.x;})
+		.attr("y", function(d){ return d.y-20+d3.event.y;});
+
+id.selectAll("foreignObject")
+		.attr("x", function(d,i){ return d.x+40+d3.event.x;})
+		.attr("y", function(d){ return d.y-20+d3.event.y;});
+
+		}
+
+}
+else{
+if(circle.id==2){				
+id.selectAll("rect").remove();										//delete rectangle
+id.selectAll("foreignObject").remove();										//delete input
+circle.id=1;
+}
+
+}
+ }
+
+function dragended(d) {
+  d3.select(this).classed("active", false);
+  
+}
+	
+	
+var drag_area=svg.append("rect") 
+	  .attr("x", drag_area_x)
+      .attr("y", drag_area_y)
+      .attr("width", drag_area_width)
+      .attr("height", drag_area_height)
+	  .attr("fill","#eeeeee");
+ 
+var instr=svg.append("text").text("Drag functions here using their icons")
+	  .attr("x", drag_area_x-40+drag_area_width/2)
+      .attr("y", drag_area_y+20)
+	  .attr("fill","e1e1e1");
+	
+</script
+
+
+
+</body>
+</html>
